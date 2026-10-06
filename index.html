@@ -67,7 +67,7 @@
     function selectLevel(level) {
         document.getElementById("level-screen").style.display = "none";
         const msg = document.getElementById("message");
-        msg.innerText = "Chargement des questions...";
+        if(msg) msg.innerText = "Chargement des questions...";
         document.getElementById("game-area").style.display = "block";
         document.getElementById("playing-area").style.display = "none";
         const url = "https://googleapis.com" + PROJECT_ID + "/databases/(default)/documents/questions";
