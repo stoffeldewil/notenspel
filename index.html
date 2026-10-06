@@ -37,14 +37,14 @@
 <div id="game-container">
     <div id="login-screen">
         <h2>🎵 Défi Solfège</h2>
-        <p style="font-size:14px; color:#64748b;">Inscris-toi pour envoyer tes scores au professeur :</p>
+        <p style="font-size:14px; color:#64748b;">Inscris-toi voor de test :</p>
         <label for="student-name">Ton prénom :</label><input type="text" id="student-name" placeholder="Ex: Lucas">
         <label for="student-class">Ta classe :</label>
         <select id="student-class">
             <option value="" disabled selected>-- Choisis ta classe --</option>
             <option value="F1">F1</option><option value="F2">F2</option><option value="F3">F3</option>
         </select>
-        <button onclick="goToLevelMenu()" style="width:100%; margin-top:10px; font-size:20px;">Suivant ➡️</button>
+        <button onclick="goToLevelMenu()" class="start-btn">Suivant ➡️</button>
     </div>
     <div id="level-screen" style="display:none;">
         <h2>🎯 Choisis ton niveau</h2>
