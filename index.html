@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8"><title>Jeu des Notes</title>
+    <style>
+        body { font-family:'Arial Black',sans-serif; background:linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab); background-size:400% 400%; animation:grad 15s ease infinite; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; position:relative; overflow:hidden; }
+        @keyframes grad { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        #game-container { background:rgba(255,255,255,0.95); padding:20px; border-radius:25px; text-align:center; max-width:380px; width:100%; box-sizing:border-box; box-shadow:0 20px 45px rgba(0,0,0,0.25); position:relative; z-index:10; }
+        .stats-container { display:flex; justify-content:space-between; margin-bottom:15px; }
+        .stat-box { font-size:20px; padding:10px; border-radius:18px; width:47%; box-shadow:inset 0 -4px 0 rgba(0,0,0,0.1); }
+        #timer-box { color:#e73c7e; background:#ffeef4; border:2px solid #ff4e50; } 
+        #score-box { color:#23a6d5; background:#eef7fa; border:2px solid #bce3f2; }
+        .stats-container span { font-size:26px; display:inline-block; }
+        #image-container { background:white; padding:10px; border-radius:15px; margin-top:5px; min-height:120px; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 15px rgba(0,0,0,0.06); border:2px solid #eee; position:relative; }
+        #note-image { max-width:100%; height:auto; border-radius:8px; }
+        #user-input { font-size:24px; color:#444; margin:15px 0; background:#f7f9fa; padding:12px; border-radius:12px; border:3px dashed #cbd5e1; display:flex; justify-content:center; gap:15px; }
+        .btn-container { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+        button { font-family:inherit; padding:14px 5px; font-size:18px; font-weight:900; background:linear-gradient(135deg,#23a6d5,#23d5ab); color:white; border:none; border-radius:14px; cursor:pointer; box-shadow:0 4px 0 #1b8cb5; }
+        button:active { transform:translateY(4px); box-shadow:0 0px 0 #1b8cb5; }
+        #btn-reset { background:linear-gradient(135deg,#ee7752,#e73c7e); box-shadow:0 4px 0 #c72c61; grid-column:span 4; }
+        #message { font-size:20px; margin-top:12px; min-height:26px; }
+        .correct { color:#23d5ab; } .wrong { color:#e73c7e; }
+        input, select { font-family:'Arial',sans-serif; font-weight:bold; width:100%; padding:12px; margin:8px 0 15px 0; border:2px solid #cbd5e1; border-radius:12px; font-size:16px; box-sizing:border-box; }
+        label { font-family:'Arial',sans-serif; display:block; text-align:left; font-weight:900; color:#4a5568; font-size:14px; }
+        h2 { font-size:28px; color:#2d3748; margin-top:5px; }
+        .level-menu-container { display:flex; flex-direction:column; gap:15px; margin-top:15px; }
+        .level-btn { display:flex; align-items:center; justify-content:flex-start; gap:15px; padding:15px 20px; font-size:18px; border-radius:16px; border:none; text-align:left; box-shadow:0 5px 0 rgba(0,0,0,0.15); color:white; font-weight:900; }
+        .level-icon { font-size:32px; background:rgba(255,255,255,0.3); padding:5px; border-radius:12px; width:40px; text-align:center; }
+        .btn-easy { background:linear-gradient(135deg,#a8ff78,#78ffd6); color:#1e4620; box-shadow:0 5px 0 #52c49a; }
+        .btn-medium { background:linear-gradient(135deg,#fff275,#ffba49); color:#5c3e00; box-shadow:0 5px 0 #c98214; }
+        .btn-hard { background:linear-gradient(135deg,#ff4e50,#f9d423); color:#ffffff; box-shadow:0 5px 0 #b82325; }
+        .arcade-coin { position:absolute; font-family:'Arial Black',sans-serif; font-size:38px; font-weight:900; color:#23d5ab; pointer-events:none; animation:fly 1s ease-out forwards; z-index:99; text-shadow:2px 2px 0px #000; display:flex; align-items:center; gap:6px; }
+        @keyframes fly { 0%{transform:translateY(30px) scale(0.5); opacity:0;} 20%{opacity:1; transform:translateY(0px) scale(1.2);} 100%{transform:translateY(-80px) scale(0.8); opacity:0;} }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <div id="login-screen">
+        <h2>🎵 Défi Solfège</h2>
+        <p style="font-size:14px; color:#64748b;">Inscris-toi pour envoyer tes scores au professeur :</p>
+        <label for="student-name">Ton prénom :</label><input type="text" id="student-name" placeholder="Ex: Lucas">
+        <label for="student-class">Ta classe :</label>
+        <select id="student-class">
+            <option value="" disabled selected>-- Choisis ta classe --</option>
+            <option value="F1">F1</option><option value="F2">F2</option><option value="F3">F3</option>
+        </select>
+        <button onclick="goToLevelMenu()" style="width:100%; margin-top:10px; font-size:20px;">Suivant ➡️</button>
+    </div>
+    <div id="level-screen" style="display:none;">
+        <h2>🎯 Choisis ton niveau</h2>
+        <div class="level-menu-container">
+            <button class="level-btn btn-easy" onclick="selectLevel('easy')"><span class="level-icon">🟢</span> <span>Niveau 1<br><span style="font-size:12px; font-weight:normal;">Débutant</span></span></button>
+            <button class="level-btn btn-medium" onclick="selectLevel('medium')"><span class="level-icon">🟡</span> <span>Niveau 2<br><span style="font-size:12px; font-weight:normal;">Intermédiaire</span></span></button>
+            <button class="level-btn btn-hard" onclick="selectLevel('hard')"><span class="level-icon">🔴</span> <span>Niveau 3<br><span style="font-size:12px; font-weight:normal;">Expert</span></span></button>
+        </div>
+    </div>
+    <div id="game-area" style="display:none;">
+        <div class="stats-container">
+            <div class="stat-box" id="timer-box">⏱️ <span id="time-left">60</span>s</div>
+            <div class="stat-box" id="score-box">🏆 <span id="score-count">0</span></div>
+        </div>
+        <div id="playing-area">
+            <div id="image-container"><img id="note-image" src="" alt="Chargement..."></div>
+            <div id="user-input"><span>-</span><span>-</span><span>-</span><span>-</span></div>
+            <div class="btn-container">
+                <button onclick="pressNote('Do')">Do</button><button onclick="pressNote('Ré')">Ré</button>
+                <button onclick="pressNote('Mi')">Mi</button><button onclick="pressNote('Fa')">Fa</button>
+                <button onclick="pressNote('Sol')">Sol</button><button onclick="pressNote('La')">La</button>
+                <button onclick="pressNote('Si')">Si</button><button onclick="clearInput()" id="btn-reset">Effacer</button>
+            </div>
+        </div>
+        <div id="message"></div>
+    </div>
+</div>
+<script>
+    const PROJECT_ID = "jeux-de-notes";
+    let currentDatabase = []; 
+    let studentName = "Test", studentClass = "F1", currentQuestionIndex = 0, score = 0, userAnswers = [], timeLeft = 60, countdownInterval;
+
+    function goToLevelMenu() {
+        const n = document.getElementById("student-name").value.trim();
+        const c = document.getElementById("student-class").value;
+        if(n === "" || !c) { alert("Veuillez entrer votre prénom ET choisir votre classe !"); return; }
+        studentName = n; studentClass = c;
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("level-screen").style.display = "block";
+    }
+    function selectLevel(level) {
+        document.getElementById("level-screen").style.display = "none";
+        const msg = document.getElementById("message");
+        msg.innerText = "Chargement des questions...";
+        document.getElementById("game-area").style.display = "block";
+        document.getElementById("playing-area").style.display = "none";
+        const url = "https://googleapis.com" + PROJECT_ID + "/databases/(default)/documents/questions";
+        fetch(url).then(function(r){return r.json();}).then(function(d){
+            if (d.documents) {
+                const fetched = d.documents.map(function(doc){
+                    const f = doc.fields;
+                    return { image: f.image.stringValue.trim(), level: f.level.stringValue, answer: f.answer.arrayValue.values.map(function(v){return v.stringValue;}) };
+                });
+                currentDatabase = fetched.filter(function(q){return q.level === level;});
+                if (currentDatabase.length === 0) { alert("Aucune question trouvée dans Firebase !"); location.reload(); return; }
+                document.getElementById("playing-area").style.display = "block";
+                setupGame();
+            }
+        }).catch(function(e){ alert("Erreur de connexion à la base de données."); });
+    }
+    function setupGame() {
+        score = 0; timeLeft = 60;
+        document.getElementById("score-count").innerText = score;
+        document.getElementById("time-left").innerText = timeLeft;
+        document.getElementById("message").innerText = "";
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(function(){ timeLeft--; document.getElementById("time-left").innerText = timeLeft; if(timeLeft<=0) endGame(); }, 1000);
+        nextQuestion();
+    }
+    function nextQuestion() {
+        userAnswers = []; updateInputDisplay(); document.getElementById("message").innerText = "";
+        currentQuestionIndex = Math.floor(Math.random() * currentDatabase.length);
+        document.getElementById("note-image").src = currentDatabase[currentQuestionIndex].image;
+    }
+    function pressNote(note) {
+        if (userAnswers.length < 4) { userAnswers.push(note); updateInputDisplay(); }
+        if (userAnswers.length === 4) {
+            const corr = currentDatabase[currentQuestionIndex].answer;
+            let isCorrect = userAnswers.every(function(val,i){return val === corr[i];});
+            const msg = document.getElementById("message");
