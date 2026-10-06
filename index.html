@@ -20,8 +20,6 @@
         #btn-reset { background:linear-gradient(135deg,#ee7752,#e73c7e); box-shadow:0 4px 0 #c72c61; grid-column:span 4; }
         #message { font-size:20px; margin-top:12px; min-height:26px; }
         .correct { color:#23d5ab; } .wrong { color:#e73c7e; }
-        input, select { font-family:'Arial',sans-serif; font-weight:bold; width:100%; padding:12px; margin:8px 0 15px 0; border:2px solid #cbd5e1; border-radius:12px; font-size:16px; box-sizing:border-box; }
-        label { font-family:'Arial',sans-serif; display:block; text-align:left; font-weight:900; color:#4a5568; font-size:14px; }
         h2 { font-size:28px; color:#2d3748; margin-top:5px; }
         .level-menu-container { display:flex; flex-direction:column; gap:15px; margin-top:15px; }
         .level-btn { display:flex; align-items:center; justify-content:flex-start; gap:15px; padding:15px 20px; font-size:18px; border-radius:16px; border:none; text-align:left; box-shadow:0 5px 0 rgba(0,0,0,0.15); color:white; font-weight:900; }
@@ -35,18 +33,8 @@
 </head>
 <body>
 <div id="game-container">
-    <div id="login-screen">
-        <h2>🎵 Défi Solfège</h2>
-        <p style="font-size:14px; color:#64748b;">Inscris-toi voor de test :</p>
-        <label for="student-name">Ton prénom :</label><input type="text" id="student-name" placeholder="Ex: Lucas">
-        <label for="student-class">Ta classe :</label>
-        <select id="student-class">
-            <option value="" disabled selected>-- Choisis ta classe --</option>
-            <option value="F1">F1</option><option value="F2">F2</option><option value="F3">F3</option>
-        </select>
-        <button onclick="goToLevelMenu()" class="start-btn">Suivant ➡️</button>
-    </div>
-    <div id="level-screen" style="display:none;">
+    <!-- HET SPEL START DIRECT OP DIT SCHERM -->
+    <div id="level-screen">
         <h2>🎯 Choisis ton niveau</h2>
         <div class="level-menu-container">
             <button class="level-btn btn-easy" onclick="selectLevel('easy')"><span class="level-icon">🟢</span> <span>Niveau 1<br><span style="font-size:12px; font-weight:normal;">Débutant</span></span></button>
@@ -75,17 +63,8 @@
 <script>
     const PROJECT_ID = "jeux-de-notes";
     let currentDatabase = []; 
-    let studentName = "Test", studentClass = "F1", currentQuestionIndex = 0, score = 0, userAnswers = [], timeLeft = 60, countdownInterval;
+    let currentQuestionIndex = 0, score = 0, userAnswers = [], timeLeft = 60, countdownInterval;
 
-    // GECORRIGEERD: Deze functie staat nu gegarandeerd in het script
-    function goToLevelMenu() {
-        const n = document.getElementById("student-name").value.trim();
-        const c = document.getElementById("student-class").value;
-        if(n === "" || !c) { alert("Veuillez entrer votre prénom ET choisir votre classe !"); return; }
-        studentName = n; studentClass = c;
-        document.getElementById("login-screen").style.display = "none";
-        document.getElementById("level-screen").style.display = "block";
-    }
     function selectLevel(level) {
         document.getElementById("level-screen").style.display = "none";
         const msg = document.getElementById("message");
@@ -126,3 +105,23 @@
             const corr = currentDatabase[currentQuestionIndex].answer;
             let isCorrect = userAnswers.every(function(val,i){return val === corr[i];});
             const msg = document.getElementById("message");
+            if (isCorrect) { score++; document.getElementById("score-count").innerText = score; msg.innerText = "Correct ! 🎉"; msg.className = "correct"; spawnImageCoinAnimation(); }
+            else { msg.innerText = "Faux ❌ Réponse: " + corr.join("-"); msg.className = "wrong"; }
+            setTimeout(nextQuestion, 1500);
+        }
+    }
+    function clearInput() { userAnswers = []; updateInputDisplay(); }
+    function updateInputDisplay() {
+        const spans = document.getElementById("user-input").getElementsByTagName("span");
+        for (let i = 0; i < 4; i++) spans[i].innerText = userAnswers[i] ? userAnswers[i] : "-";
+    }
+    function spawnImageCoinAnimation() {
+        const container = document.getElementById("image-container");
+        const coin = document.createElement("div"); coin.className = "arcade-coin"; coin.innerHTML = "<span>🪙</span><span style='color:#23d5ab;'>+1</span>";
+        coin.style.left = "calc(50% - 35px)"; container.appendChild(coin);
+        setTimeout(function(){ coin.remove(); }, 1000);
+    }
+    function endGame() {
+        clearInterval(countdownInterval); document.getElementById("playing-area").style.display = "none";
+        const msg = document.getElementById("message"); msg.className = ""; msg.innerHTML = "<h3>⏱️ Temps écoulé !</h3><p>Ton score final est de <strong>"+score+"</strong> point(s).</p><p id='upload-status'>Envoi du score...</p>";
+        const url = "https://googleapis.com" + PROJECT_ID + "/databases/(default)/documents/scores";
